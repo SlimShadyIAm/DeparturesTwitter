@@ -6,7 +6,6 @@ except ImportError as _:
     import ConfigParser as configparser
 
 import getopt
-import os
 import sys
 import twitter
 import asyncio
@@ -59,10 +58,10 @@ async def fetch_current():
 
 
 async def main():
-    api = twitter.Api(consumer_key=os.environ.get("DEP_CONS"),
-                      consumer_secret=os.environ.get("DEP_CONS_SEC"),
-                      access_token_key=os.environ.get("DEP_ACC"),
-                      access_token_secret=os.environ.get("DEP_ACC_SEC"))
+    api = twitter.Api(consumer_key=environ.get("DEP_CONS"),
+                      consumer_secret=environ.get("DEP_CONS_SEC"),
+                      access_token_key=environ.get("DEP_ACC"),
+                      access_token_secret=environ.get("DEP_ACC_SEC"))
 
     data_old = await fetch_current()
     print(data_old)
