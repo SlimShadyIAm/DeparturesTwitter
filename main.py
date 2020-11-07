@@ -95,23 +95,6 @@ async def remove_seen(item):
     if item in seen:
         seen.remove(item)
 
-
-def GetConsumerKeyEnv():
-    return os.environ.get("DEP_CONS", None)
-
-
-def GetConsumerSecretEnv():
-    return os.environ.get("DEP_CONS_SEC", None)
-
-
-def GetAccessKeyEnv():
-    return os.environ.get("DEP_ACC", None)
-
-
-def GetAccessSecretEnv():
-    return os.environ.get("DEP_ACC_SEC", None)
-
-
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
