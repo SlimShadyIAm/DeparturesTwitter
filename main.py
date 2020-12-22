@@ -39,8 +39,8 @@ async def fetch_current():
                 if isinstance(result, element.Tag):
                     if result.find('p', class_="has-text-success") is not None:
 
-                        time = result.find(
-                            'p', class_="has-text-light").text.strip()
+                        time = result.find_all(
+                            'p', class_="has-text-light")[-1].text.strip()
                         try:
                             if ("second" in time) or ("minute" in time and int(time.split()[0]) < 5) or ("now" in time):
                                 name = result.find(
