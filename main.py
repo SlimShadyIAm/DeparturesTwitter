@@ -1,4 +1,7 @@
 from __future__ import print_function
+from dotenv import load_dotenv
+
+load_dotenv()
 
 try:
     import configparser
