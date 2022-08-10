@@ -3,25 +3,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-try:
-    import configparser
-except ImportError as _:
-    import ConfigParser as configparser
-
-import getopt
-import sys
 import twitter
 import asyncio
 from os import environ
-import aiohttp
-from bs4 import BeautifulSoup, element
+import feedparser
 
-URL = 'https://departures.to/'
-WEBHOOK_URL = environ.get("TESTFLIGHT")
+URL = 'https://calm-wildwood-09447.herokuapp.com/twitterFeed.rss'
 data_old = []
 urls_dict = {}
 blacklist = ["Transparent App Icons", "Dark Noise",
              "Aloha Browser", "The New York Times"]
+
 seen = []
 
 
@@ -31,33 +23,9 @@ async def fetch(session, url):
 
 
 async def fetch_current():
-    current_apps = []
-    async with aiohttp.ClientSession() as session:
-        html = await fetch(session, URL)
-        soup = BeautifulSoup(html, 'html.parser')
-        results = soup.find_all(class_='columns')
-
-        for result in results:
-            try:
-                if isinstance(result, element.Tag):
-                    if result.find('p', class_="has-text-success") is not None:
-
-                        time = result.find_all(
-                            'p', class_="has-text-light")[-1].text.strip()
-                        try:
-                            if ("second" in time) or ("minute" in time and int(time.split()[0]) < 5) or ("now" in time):
-                                name = result.find(
-                                    'p', class_="has-text-warning").text.strip()
-
-                                urls_dict[name] = f'https://departures.to{result.find_parent("a")["href"]}'
-                                current_apps.append(name)
-                        except ValueError:
-                            pass
-            except Exception as e:
-                print("Error in main()")
-                print(e)
-
-    return current_apps
+    feed_data = feedparser.parse(URL)
+    results = { entry['title']: entry['link'] for entry in feed_data.entries }
+    return results
 
 
 async def main():
@@ -67,7 +35,6 @@ async def main():
                       access_token_secret=environ.get("DEP_ACC_SEC"))
 
     data_old = await fetch_current()
-    print(data_old)
 
     while True:
         try:
@@ -80,6 +47,7 @@ async def main():
                         status = api.PostUpdate(
                             f'{app} just had a TestFlight spot open up! {urls_dict[app]}')
                         print(f'{status.user.name} posted {status.text}')
+                        print(f'Just posted about {app}!')
                     except Exception as e:
                         print(e)
                     asyncio.create_task(remove_seen(app))
