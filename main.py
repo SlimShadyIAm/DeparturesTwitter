@@ -10,7 +10,7 @@ import feedparser
 
 URL = 'https://calm-wildwood-09447.herokuapp.com/twitterFeed.rss'
 data_old = []
-urls_dict = {}
+urls_to_title = {}
 blacklist = ["Transparent App Icons", "Dark Noise",
              "Aloha Browser", "The New York Times"]
 
@@ -24,8 +24,9 @@ async def fetch(session, url):
 
 async def fetch_current():
     feed_data = feedparser.parse(URL)
-    results = { entry['title']: entry['link'] for entry in feed_data.entries }
-    return results
+    for entry in feed_data.entries:
+        urls_to_title[entry['link']] = entry['title']
+    return [ entry['link'] for entry in feed_data.entries ]
 
 
 async def main():
@@ -40,18 +41,14 @@ async def main():
         try:
             data_now = await fetch_current()
             diff = list(set(data_now) - set(data_old))
-            for app in diff:
-                if app not in blacklist and app not in seen:
-                    seen.append(app)
-                    try:
-                        status = api.PostUpdate(
-                            f'{app} just had a TestFlight spot open up! {urls_dict[app]}')
-                        print(f'{status.user.name} posted {status.text}')
-                        print(f'Just posted about {app}!')
-                    except Exception as e:
-                        print(e)
-                    asyncio.create_task(remove_seen(app))
-                    print("NEW", app + urls_dict[app])
+            for app_link in diff:
+                app_title = urls_to_title[app_link]
+                if app_title not in blacklist and app_link not in seen:
+                    seen.append(app_link)
+                    asyncio.create_task(remove_seen(app_link))
+                    status = api.PostUpdate(
+                        f'{app_title} just had a TestFlight spot open up! {app_link}')
+                    print(f'{status.user.name} posted a new Tweet!\n"{status.text}"')
             data_old = data_now
         except Exception as e:
             print("Error in POST")
@@ -61,11 +58,12 @@ async def main():
 
 
 async def remove_seen(item):
-    await asyncio.sleep(360)
+    await asyncio.sleep(600)
     print("removing", item)
     if item in seen:
         seen.remove(item)
 
 if __name__ == '__main__':
+    print("[✈️] Now watching...")
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
